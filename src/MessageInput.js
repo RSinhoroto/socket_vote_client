@@ -2,7 +2,6 @@ import React, { useState, useContext } from 'react';
 import { SocketConnection } from './lib/socketConnection'
 
 import './MessageInput.css';
-const roomId = 1
 const NewMessage = (props) => {
   const {room} = props
   const [value, setValue] = useState('');

@@ -5,8 +5,6 @@ import { SocketConnection } from '../lib/socketConnection'
 import Messages from '../Messages';
 import MessageInput from '../MessageInput';
 import '../App.css';
-import { socket } from '../context/SocketProvider';
-const roomId = 1;
 
 function Room(props){
   const {room} = props
@@ -30,7 +28,6 @@ function Room(props){
   useEffect(() => {
     window.localStorage.setItem('name', name);
   }, [name]);
-  const roomName = name
   return (
     <div className="App">
       <header className="app-header">
