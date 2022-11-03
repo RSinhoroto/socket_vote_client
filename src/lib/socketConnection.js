@@ -5,7 +5,7 @@ export class SocketConnection {
   constructor(params) {
     const socketParams = { auth: { name: "Joana" } }
     console.log(socketParams)
-    this.socket = socketio.connect("http://192.168.0.13:3030", socketParams)
+    this.socket = socketio.connect("http://192.168.0.11:3030", socketParams)
   }
   static getInstance(params) { //private
     if (!SocketConnection.instance) {
@@ -31,6 +31,11 @@ export class SocketConnection {
   }
   getMessages(room) {
     return this.push('getMessages', room)
+  }
+
+  // Get vote count already in the room
+  getVotes(room) {
+    return this.push('getVotes', room)
   }
 
   // Identify vote message received and update vote count onscreen

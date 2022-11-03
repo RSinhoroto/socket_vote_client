@@ -24,6 +24,7 @@ function Messages(props) {
 
     socketConn.onMessageReceived(messageListener)
     socketConn.getMessages(room)
+    socketConn.getVotes(room)
 
     return () => { };
   }, [socketConn]);
