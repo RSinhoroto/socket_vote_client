@@ -2,10 +2,11 @@ import '../Player.css';
 import React, { useRef, useEffect, useState } from 'react';
 import { SocketConnection } from '../../lib/socketConnection';
 
+let game;
+
 export const Player = () => {
 
   // used variables
-  const [game, setGame] = useState(undefined);
   const [connected, setConnected] = useState(false);
   const [totalPlayersCount, setTotalPlayersCount] = useState('');
 
@@ -56,7 +57,7 @@ export const Player = () => {
       scoreSliced.forEach((score) => {
 
         scoreTableInnerHTML += `
-                            <tr class="${socket.id === score.socketId ? 'current-player' : ''}">
+                            <tr class="${socket.socket.id === score.socketId ? 'current-player' : ''}">
                                 <td class="socket-id">${score.socketId}</td>
                                 <td class="score-value">${score.score}</td>
                             </tr>
@@ -66,7 +67,7 @@ export const Player = () => {
       let playerNotInTop10 = true;
 
       for (const score of scoreSliced) {
-        if (socket.id === score.socketId) {
+        if (socket.socket.id === score.socketId) {
           playerNotInTop10 = false;
           break;
         };
@@ -77,8 +78,8 @@ export const Player = () => {
       if (playerNotInTop10) {
         scoreTableInnerHTML += `
                             <tr class="current-player bottom">
-                                <td class="socket-id">${socket.id}</td>
-                                <td class="score-value">${game.players[socket.id].score}</td>
+                                <td class="socket-id">${socket.socket.id}</td>
+                                <td class="score-value">${game.players[socket.socket.id].score}</td>
                             </tr>
                         `
       };
@@ -115,7 +116,7 @@ export const Player = () => {
       const gameCanvas = canvasRef.current;
       if (!gameCanvas) return;
 
-      setGame(gameInitialState);
+      game = gameInitialState;
       console.log('Received initial state')
 
       gameCanvas.style.width = `${game.canvasWidth * 18}px`
@@ -148,7 +149,7 @@ export const Player = () => {
           context.fillRect(fruit.x, fruit.y, 1, 1)
         }
 
-        const currentPlayer = game.players[socket.id]
+        const currentPlayer = game.players[socket.socket.id]
         context.fillStyle = '#F0DB4F'
         context.globalAlpha = 1
         context.fillRect(currentPlayer.x, currentPlayer.y, 1, 1)
@@ -167,7 +168,7 @@ export const Player = () => {
     });
 
     socket.addEventListener('update-player-score', (score) => {
-      game.players[socket.id].score = score
+      game.players[socket.socket.id].score = score
       updateScoreTable()
     });
 
@@ -215,29 +216,29 @@ export const Player = () => {
 
   function handleKeydown(event) {
     if (connected) {
-      const player = game.players[socket.id];
+      const player = game.players[socket.socket.id];
 
       if (event.which === 37 && player.x - 1 >= 0) {
         player.x = player.x - 1
-        socket.emit('player-move', 'left')
+        socket.push('player-move', 'left')
         return
       };
 
       if (event.which === 38 && player.y - 1 >= 0) {
         player.y = player.y - 1
-        socket.emit('player-move', 'up')
+        socket.push('player-move', 'up')
         return
       };
 
       if (event.which === 39 && player.x + 1 < game.canvasWidth) {
         player.x = player.x + 1
-        socket.emit('player-move', 'right')
+        socket.push('player-move', 'right')
         return
       };
 
       if (event.which === 40 && player.y + 1 < game.canvasHeight) {
         player.y = player.y + 1
-        socket.emit('player-move', 'down')
+        socket.push('player-move', 'down')
         return
       };
     };

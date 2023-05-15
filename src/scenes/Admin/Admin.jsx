@@ -2,10 +2,11 @@ import '../Player.css';
 import React, { useRef, useEffect, useState } from 'react';
 import { SocketConnection } from '../../lib/socketConnection';
 
+let game;
+
 export const Admin = () => {
 
     // used variables
-    const [game, setGame] = useState(undefined);
     const [connected, setConnected] = useState(false);
     const [totalPlayersCount, setTotalPlayersCount] = useState('');
 
@@ -58,7 +59,7 @@ export const Admin = () => {
             scoreSliced.forEach((score) => {
 
                 scoreTableInnerHTML += `
-                            <tr class="${socket.id === score.socketId ? 'current-player' : ''}">
+                            <tr class="${socket.socket.id === score.socketId ? 'current-player' : ''}">
                                 <td class="socket-id">${score.socketId}</td>
                                 <td class="score-value">${score.score}</td>
                             </tr>
@@ -68,7 +69,7 @@ export const Admin = () => {
             let playerNotInTop10 = true;
 
             for (const score of scoreSliced) {
-                if (socket.id === score.socketId) {
+                if (socket.socket.id === score.socketId) {
                     playerNotInTop10 = false;
                     break;
                 };
@@ -79,8 +80,8 @@ export const Admin = () => {
             if (playerNotInTop10) {
                 scoreTableInnerHTML += `
                             <tr class="current-player bottom">
-                                <td class="socket-id">${socket.id}</td>
-                                <td class="score-value">${game.players[socket.id].score}</td>
+                                <td class="socket-id">${socket.socket.id}</td>
+                                <td class="score-value">${game.players[socket.socket.id].score}</td>
                             </tr>
                         `
             };
@@ -117,7 +118,7 @@ export const Admin = () => {
             const gameCanvas = canvasRef.current;
             if (!gameCanvas) return;
 
-            setGame(gameInitialState);
+            game = gameInitialState;
             console.log('Received initial state')
 
             gameCanvas.style.width = `${game.canvasWidth * 18}px`
@@ -150,7 +151,7 @@ export const Admin = () => {
                     context.fillRect(fruit.x, fruit.y, 1, 1)
                 }
 
-                const currentPlayer = game.players[socket.id]
+                const currentPlayer = game.players[socket.socket.id]
                 context.fillStyle = '#F0DB4F'
                 context.globalAlpha = 1
                 context.fillRect(currentPlayer.x, currentPlayer.y, 1, 1)
@@ -169,7 +170,7 @@ export const Admin = () => {
         });
 
         socket.addEventListener('update-player-score', (score) => {
-            game.players[socket.id].score = score
+            game.players[socket.socket.id].score = score
             updateScoreTable()
         });
 
@@ -213,34 +214,33 @@ export const Admin = () => {
             clearInterval(crazyModeInterval);
         });
 
-    }, [canvasRef, socket, tableRef, totalPlayersCount,
-        game.canvasHeight, game.canvasWidth, game.fruits, game.players,]);
+    }, []);
 
     function handleKeydown(event) {
         if (connected) {
-            const player = game.players[socket.id];
+            const player = game.players[socket.socket.id];
 
             if (event.which === 37 && player.x - 1 >= 0) {
                 player.x = player.x - 1
-                socket.emit('player-move', 'left')
+                socket.push('player-move', 'left')
                 return
             };
 
             if (event.which === 38 && player.y - 1 >= 0) {
                 player.y = player.y - 1
-                socket.emit('player-move', 'up')
+                socket.push('player-move', 'up')
                 return
             };
 
             if (event.which === 39 && player.x + 1 < game.canvasWidth) {
                 player.x = player.x + 1
-                socket.emit('player-move', 'right')
+                socket.push('player-move', 'right')
                 return
             };
 
             if (event.which === 40 && player.y + 1 < game.canvasHeight) {
                 player.y = player.y + 1
-                socket.emit('player-move', 'down')
+                socket.push('player-move', 'down')
                 return
             };
         };
@@ -283,23 +283,23 @@ export const Admin = () => {
 
         const interval = element.value
         console.log(interval)
-        socket.emit('admin-start-fruit-game', interval)
+        socket.push('admin-start-fruit-game', interval)
     }
 
     function stopFruitGame() {
-        socket.emit('admin-stop-fruit-game')
+        socket.push('admin-stop-fruit-game')
     }
 
     function startCrazyMode() {
-        socket.emit('admin-start-crazy-mode')
+        socket.push('admin-start-crazy-mode')
     }
 
     function stopCrazyMode() {
-        socket.emit('admin-stop-crazy-mode')
+        socket.push('admin-stop-crazy-mode')
     }
 
     function clearScores() {
-        socket.emit('admin-clear-scores')
+        socket.push('admin-clear-scores')
     }
 
     function setMaxConcurrentConnections() {
@@ -307,7 +307,7 @@ export const Admin = () => {
         if (!element) return
 
         const maxConcurrentConnections = element.value
-        socket.emit('admin-concurrent-connections', maxConcurrentConnections)
+        socket.push('admin-concurrent-connections', maxConcurrentConnections)
     }
 
     return (
