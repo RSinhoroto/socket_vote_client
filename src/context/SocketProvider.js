@@ -1,15 +1,17 @@
-import { createContext } from 'react'
-import socketio from 'socket.io-client'
+import { createContext } from 'react';
+import socketio from 'socket.io-client';
 
-const SocketContext = createContext()
+const SocketContext = createContext();
 
-const socket = socketio.connect("http://192.168.0.11:3030", {
+const socketPlayer = socketio.connect("http://localhost:3030");
+const socketAdmin = socketio.connect("http://localhost:3030", {
   auth: {
-    name: "Joana"
+    name: "Admin"
   }
-})
+});
 
 export {
-  socket,
-  SocketContext
-}
+  socketPlayer,
+  socketAdmin,
+  SocketContext,
+};

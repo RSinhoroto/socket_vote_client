@@ -1,50 +1,48 @@
-import socketio from 'socket.io-client'
+import { io, Socket } from 'socket.io-client'
 
 export class SocketConnection {
-  static instance; //private static instance
-  constructor(params) {
-    const socketParams = { auth: { name: "Joana" } }
-    console.log(socketParams)
-    this.socket = socketio.connect("http://192.168.0.11:3030", socketParams)
-  }
-  static getInstance(params) { //private
+  static instance;
+  socket;
+  serverAddress = 'http://localhost:3030';
+
+  static getInstance(params) {
     if (!SocketConnection.instance) {
-      SocketConnection.instance = new SocketConnection()
+      SocketConnection.instance = new SocketConnection(params);
     }
-    return SocketConnection.instance
+    return SocketConnection.instance;
   }
-  push(command, message) { //private
-    return this.socket.emit(command, message)
+
+  connect(isAdmin = false) {
+    if (!this.socket) {
+      if (isAdmin) {
+        this.socket = io(this.serverAddress, {
+          query: {
+            admin: true
+          }
+        });
+      } else {
+        this.socket = io(this.serverAddress);
+      }
+    }
   }
-  addEventListener(eventName, callback) { //private
+
+  disconnect() {
+    if (this.socket) {
+      this.socket.removeAllListeners();
+      this.socket.close();
+      this.socket = undefined;
+    }
+  }
+
+  push(tag, message) {
+    if (this.socket) return this.socket.emit(tag, message);
+  }
+
+  addEventListener(eventName, callback) {
     const ref = this.socket.on(eventName, callback)
     return () => this.socket.off(eventName, ref)
   }
   onMessageReceived(callback) {
     return this.addEventListener(`message`, callback)
-  }
-  pushMessage(room, message) {
-    return this.push(`message`, { message, room })
-  }
-  joinRoom(room) {
-    return this.push('join-room', room)
-  }
-  getMessages(room) {
-    return this.push('getMessages', room)
-  }
-
-  // Get vote count already in the room
-  getVotes(room) {
-    return this.push('getVotes', room)
-  }
-
-  // Identify vote message received and update vote count onscreen
-  onVoteReceived(callback) {
-    return this.addEventListener('vote', callback)
-  }
-
-  // Send a vote to server
-  pushVote(room, message) {
-    return this.push(`vote`, { message, room })
   }
 }
